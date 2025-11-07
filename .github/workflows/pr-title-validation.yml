@@ -1,0 +1,22 @@
+name: PR Title Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened] # Triggers when PR is created or updated
+    branches:
+      - main
+
+jobs:
+  check_title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title format
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          # Regex to match "Release (PROD): vX.Y.Z"
+          if [[ "$PR_TITLE" =~ ^Release\ \(PROD\):\ v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "✅ PR title format is correct."
+          else
+            echo "❌ PR title format is incorrect. It must start with 'Release (PROD): v' followed by a valid version number (e.g., v1.1.0)."
+            exit 1
+          fi

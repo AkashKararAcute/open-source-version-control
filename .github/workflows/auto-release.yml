@@ -1,0 +1,37 @@
+name: Release from PR Title
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.pull_request.merged == true && 
+      startsWith(github.event.pull_request.title, 'Release (PROD): v')
+    permissions:
+      contents: write # Allows the job to create the release
+
+    steps:
+      - name: Extract version from PR title
+        id: extract_version
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          VERSION=$(echo "$PR_TITLE" | sed -E 's/Release \(PROD\): (v[0-9]+\.[0-9]+\.[0-9]+)/\1/')
+          echo "Extracted Version: $VERSION"
+          echo "release_version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release with auto-generated notes
+        uses: softprops/action-gh-release@v2 # Using a different action that supports auto generation
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.extract_version.outputs.release_version }}
+          name: ${{ steps.extract_version.outputs.release_version }}
+          # This tells GitHub to automatically generate the notes based on merged PRs/commits since the last release
+          generate_release_notes: true
+          # You can still add a prefix/suffix to the generated body if you like:
