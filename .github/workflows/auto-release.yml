@@ -17,6 +17,30 @@ jobs:
       contents: write # Allows the job to create the release
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed for git history (release notes)
+
+      # ------------------------------------------------------------------
+      # 1. BUILD YOUR PROJECT
+      # ------------------------------------------------------------------
+      - name: Install dependencies & build
+        run: |
+          # Example for a Node.js project – replace with your own commands
+          npm ci
+          npm run build          # this must create the ./build folder
+
+      # ------------------------------------------------------------------
+      # 2. ZIP THE BUILD FOLDER
+      # ------------------------------------------------------------------
+      - name: Zip build folder
+        run: |
+          zip -r build.zip build/
+
+      # ------------------------------------------------------------------
+      # 3. EXTRACT VERSION
+      # ------------------------------------------------------------------
       - name: Extract version from PR title
         id: extract_version
         run: |
@@ -25,8 +49,11 @@ jobs:
           echo "Extracted Version: $VERSION"
           echo "release_version=$VERSION" >> $GITHUB_OUTPUT
 
+      # ------------------------------------------------------------------
+      # 4. CREATE RELEASE + UPLOAD build.zip (only new `files:` line)
+      # ------------------------------------------------------------------
       - name: Create GitHub Release with auto-generated notes
-        uses: softprops/action-gh-release@v2 # Using a different action that supports auto generation
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -35,3 +62,5 @@ jobs:
           # This tells GitHub to automatically generate the notes based on merged PRs/commits since the last release
           generate_release_notes: true
           # You can still add a prefix/suffix to the generated body if you like:
+          files: |
+            build.zip          # NEW – adds the zip as an extra asset
