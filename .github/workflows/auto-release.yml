@@ -27,17 +27,34 @@ jobs:
       # ------------------------------------------------------------------
       - name: Install dependencies & build
         run: |
-          # Example for a Node.js project – replace with your own commands
           npm ci
-          npm run build          # this must create the ./build folder
+          npm run build
 
-      # ------------------------------------------------------------------
-      # 2. ZIP THE BUILD FOLDER
-      # ------------------------------------------------------------------
+      - name: List files after build (DEBUG)
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Files in root:"
+          ls -la
+          echo "Does 'build' folder exist?"
+          if [ -d "build" ]; then
+            echo "YES! Contents of build/:"
+            ls -la build/
+          else
+            echo "NO! build/ folder missing."
+            echo "Available folders:"
+            find . -maxdepth 2 -type d
+          fi
+
       - name: Zip build folder
         run: |
-          zip -r build.zip build/
-
+          if [ -d "build" ]; then
+            zip -r build.zip build/
+            echo "build.zip created successfully"
+          else
+            echo "ERROR: build/ folder not found!"
+            exit 1
+          fi
       # ------------------------------------------------------------------
       # 3. EXTRACT VERSION
       # ------------------------------------------------------------------
