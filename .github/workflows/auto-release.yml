@@ -80,4 +80,4 @@ jobs:
           generate_release_notes: true
           # You can still add a prefix/suffix to the generated body if you like:
           files: |
-            build.zip          # NEW – adds the zip as an extra asset
+            build.zip
