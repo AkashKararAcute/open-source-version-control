@@ -67,6 +67,18 @@ jobs:
           echo "release_version=$VERSION" >> $GITHUB_OUTPUT
 
       # ------------------------------------------------------------------
+      # 3.5. EXTRACT PR DESCRIPTION
+      # ------------------------------------------------------------------
+      - name: Extract PR description
+        id: extract_description
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+          # Store PR description for later use
+          echo "pr_description<<EOF" >> $GITHUB_OUTPUT
+          echo "$PR_BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # ------------------------------------------------------------------
       # 4. CREATE RELEASE + UPLOAD build.zip (only new `files:` line)
       # ------------------------------------------------------------------
       - name: Create GitHub Release with auto-generated notes
@@ -76,6 +88,13 @@ jobs:
         with:
           tag_name: ${{ steps.extract_version.outputs.release_version }}
           name: ${{ steps.extract_version.outputs.release_version }}
+          body: |
+            ## Release Notes
+            ${{ steps.extract_description.outputs.pr_description }}
+
+            ---
+
+            ## Auto-Generated Changelog
           # This tells GitHub to automatically generate the notes based on merged PRs/commits since the last release
           generate_release_notes: true
           # You can still add a prefix/suffix to the generated body if you like:
