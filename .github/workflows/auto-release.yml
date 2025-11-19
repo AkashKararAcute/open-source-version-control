@@ -89,7 +89,6 @@ jobs:
           tag_name: ${{ steps.extract_version.outputs.release_version }}
           name: ${{ steps.extract_version.outputs.release_version }}
           body: |
-            ## Release Notes
             ${{ steps.extract_description.outputs.pr_description }}
           generate_release_notes: true
           # You can still add a prefix/suffix to the generated body if you like:
