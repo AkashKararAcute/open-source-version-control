@@ -91,11 +91,6 @@ jobs:
           body: |
             ## Release Notes
             ${{ steps.extract_description.outputs.pr_description }}
-
-            ---
-
-            ## Auto-Generated Changelog
-          # This tells GitHub to automatically generate the notes based on merged PRs/commits since the last release
           generate_release_notes: true
           # You can still add a prefix/suffix to the generated body if you like:
           files: |
