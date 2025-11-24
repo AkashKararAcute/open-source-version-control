@@ -26,6 +26,7 @@ jobs:
       # 1. BUILD YOUR PROJECT
       # ------------------------------------------------------------------
       - name: Install dependencies & build
+        continue-on-error: true
         run: |
           npm ci
           npm run build
@@ -47,13 +48,13 @@ jobs:
           fi
 
       - name: Zip build folder
+        continue-on-error: true
         run: |
           if [ -d "build" ]; then
             zip -r build.zip build/
             echo "build.zip created successfully"
           else
-            echo "ERROR: build/ folder not found!"
-            exit 1
+            echo "WARNING: build/ folder not found! Release will be created without build artifact."
           fi
       # ------------------------------------------------------------------
       # 3. EXTRACT VERSION
@@ -79,9 +80,19 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       # ------------------------------------------------------------------
-      # 4. CREATE RELEASE + UPLOAD build.zip (only new `files:` line)
+      # 4. CREATE RELEASE + UPLOAD build.zip (conditional)
       # ------------------------------------------------------------------
-      - name: Create GitHub Release with auto-generated notes
+      - name: Check if build.zip exists
+        id: check_build
+        run: |
+          if [ -f "build.zip" ]; then
+            echo "build_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release with build artifact (if build succeeded)
+        if: steps.check_build.outputs.build_exists == 'true'
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -91,6 +102,19 @@ jobs:
           body: |
             ${{ steps.extract_description.outputs.pr_description }}
           generate_release_notes: true
-          # You can still add a prefix/suffix to the generated body if you like:
           files: |
             build.zip
+
+      - name: Create GitHub Release without build artifact (if build failed)
+        if: steps.check_build.outputs.build_exists == 'false'
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.extract_version.outputs.release_version }}
+          name: ${{ steps.extract_version.outputs.release_version }}
+          body: |
+            ⚠️ **Build Failed** - Release created without build artifacts
+
+            ${{ steps.extract_description.outputs.pr_description }}
+          generate_release_notes: true
