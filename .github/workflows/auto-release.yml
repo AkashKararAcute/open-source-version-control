@@ -27,6 +27,7 @@ jobs:
       # ------------------------------------------------------------------
       - name: Install dependencies & build
         continue-on-error: true
+        timeout-minutes: 15
         run: |
           npm ci
           npm run build
