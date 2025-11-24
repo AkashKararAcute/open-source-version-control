@@ -114,7 +114,5 @@ jobs:
           tag_name: ${{ steps.extract_version.outputs.release_version }}
           name: ${{ steps.extract_version.outputs.release_version }}
           body: |
-            ⚠️ **Build Failed** - Release created without build artifacts
-
             ${{ steps.extract_description.outputs.pr_description }}
           generate_release_notes: true
