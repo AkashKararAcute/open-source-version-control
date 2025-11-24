@@ -29,7 +29,7 @@ jobs:
         continue-on-error: true
         run: |
           npm ci
-          npm run build1
+          npm run build
 
       - name: List files after build (DEBUG)
         run: |
