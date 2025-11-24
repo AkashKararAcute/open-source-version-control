@@ -22,6 +22,12 @@ jobs:
         with:
           fetch-depth: 0 # needed for git history (release notes)
 
+      - name: Setup Node.js (with cache – this fixes the 7-minute hang)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20" # or '18' if you use old Create-React-App
+          cache: "npm"
+
       # ------------------------------------------------------------------
       # 1. BUILD YOUR PROJECT
       # ------------------------------------------------------------------
