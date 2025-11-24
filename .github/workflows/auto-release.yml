@@ -26,8 +26,8 @@ jobs:
       # 1. BUILD YOUR PROJECT
       # ------------------------------------------------------------------
       - name: Install dependencies & build
-        continue-on-error: true
         timeout-minutes: 15
+        continue-on-error: true
         run: |
           npm ci
           npm run build
