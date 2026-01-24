@@ -17,16 +17,60 @@ jobs:
       contents: write # Allows the job to create the release
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed for git history (release notes)
+
+      # ------------------------------------------------------------------
+      # 1. BUILD YOUR PROJECT
+      # ------------------------------------------------------------------
+      - name: Install dependencies & build
+        run: |
+          npm ci
+          npm run build
+
+      - name: List files after build (DEBUG)
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Files in root:"
+          ls -la
+          echo "Does 'build' folder exist?"
+          if [ -d "build" ]; then
+            echo "YES! Contents of build/:"
+            ls -la build/
+          else
+            echo "NO! build/ folder missing."
+            echo "Available folders:"
+            find . -maxdepth 2 -type d
+          fi
+
+      - name: Zip build folder
+        run: |
+          if [ -d "build" ]; then
+            zip -r build.zip build/
+            echo "build.zip created successfully"
+          else
+            echo "ERROR: build/ folder not found!"
+            exit 1
+          fi
+      # ------------------------------------------------------------------
+      # 3. EXTRACT VERSION
+      # ------------------------------------------------------------------
       - name: Extract version from PR title
         id: extract_version
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
-          VERSION=$(echo "$PR_TITLE" | sed -E 's/Release \(PROD\): (v[0-9]+\.[0-9]+\.[0-9]+)/\1/')
+          VERSION=$(echo "$PR_TITLE" | sed -E 's/Release \(PROD\): (v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/\1/')
           echo "Extracted Version: $VERSION"
           echo "release_version=$VERSION" >> $GITHUB_OUTPUT
 
+      # ------------------------------------------------------------------
+      # 4. CREATE RELEASE + UPLOAD build.zip (only new `files:` line)
+      # ------------------------------------------------------------------
       - name: Create GitHub Release with auto-generated notes
-        uses: softprops/action-gh-release@v2 # Using a different action that supports auto generation
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -35,3 +79,5 @@ jobs:
           # This tells GitHub to automatically generate the notes based on merged PRs/commits since the last release
           generate_release_notes: true
           # You can still add a prefix/suffix to the generated body if you like:
+          files: |
+            build.zip
